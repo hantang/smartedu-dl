@@ -1,6 +1,8 @@
 import logging
-import shutil
+import base64
 import random
+import shutil
+import tempfile
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -64,3 +66,19 @@ def get_file_path(base_file, filename):
     out_path = Path(current_dir, filename).resolve()
     logging.debug(f"file = {filename}\nout={out_path}")
     return out_path
+
+
+def image_to_base64(filename, save_file):
+    # Convert the image to base64 format
+    with open(filename, "rb") as f:
+        encoded_image = base64.b64encode(f.read())
+    with open(save_file, "w", encoding="utf-8") as f:
+        f.write(encoded_image.decode("utf-8"))
+
+
+def base64_to_image(icon_str, name):
+    temp_file = Path(tempfile.gettempdir(), name)
+    icon_data = base64.b64decode(icon_str)
+    with open(temp_file, "wb") as f:
+        f.write(icon_data)
+    return str(temp_file)

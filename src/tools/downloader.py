@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Callable
 
 import requests
-# from tqdm import tqdm
 
 from .utils import gen_filename, get_headers
 

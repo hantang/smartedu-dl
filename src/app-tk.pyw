@@ -2,22 +2,21 @@
 图形界面版本（tkinter实现）：智慧教育平台资源下载工具
 """
 
-import argparse
 import logging
 import time
 import tkinter as tk
 import tkinter.font as tkFont
-from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
 from tools.downloader import download_files_tk, fetch_all_data
-from tools.logo import DESCRIBES, LOGO_TEXT
-from tools.parser import extract_resource_url, parse_urls, RESOURCE_DICT
+from tools.parser import extract_resource_url, parse_urls
 from tools.parser2 import fetch_metadata, gen_url_from_tags, query_metadata
-from tools.utils import get_file_path
+from tools.utils import base64_to_image
+from tools.parser import RESOURCE_DICT
+from tools.logo import DESCRIBES, LOGO_TEXT
+from tools.icons import ICON_LARGE, ICON_SMALL
 
-ICON_PATH = "icons"
-DATA_PATH = "../data"
+
 RESOURCE_FORMATS = ["pdf", "mp3", "ogg", "jpg", "m3u8", "superboard"]
 RESOURCE_NAMES = ["文档", "音频", "音频", "图片", "视频", "白板"]
 
@@ -49,7 +48,7 @@ def update_labels_wraplength(event, labels, scale=1.0, delta=20, frame=None):
     wraplength = int(width - delta * scale)
 
     for label in labels:
-        label.config(wraplength=wraplength)
+        label.configure(wraplength=wraplength)
 
 
 class BookSelectorFrame(ttk.Frame):
@@ -128,8 +127,8 @@ class BookSelectorFrame(ttk.Frame):
         self.deselect_all_btn = ttk.Button(btn_frame, text="取消全选", command=self.deselect_all)
         self.select_all_btn.pack(side=tk.RIGHT, padx=self.padx)
         self.deselect_all_btn.pack(side=tk.RIGHT, padx=self.padx)
-        self.select_all_btn.config(state=tk.DISABLED)
-        self.deselect_all_btn.config(state=tk.DISABLED)
+        self.select_all_btn.configure(state=tk.DISABLED)
+        self.deselect_all_btn.configure(state=tk.DISABLED)
 
     def setup_hierarchy_frame(self):
         """设置教材层级部分"""
@@ -148,14 +147,13 @@ class BookSelectorFrame(ttk.Frame):
         """查询数据并更新下拉框"""
         # 获取第一级数据
         if self.hier_dict is None:
-            self.hierarchy_frame.config(text="联网查询教材数据中……")
-            data_dir = get_file_path(__file__, DATA_PATH)
-            self.hier_dict, self.tag_dict, self.id_dict = fetch_metadata(data_dir)
+            self.hierarchy_frame.configure(text="联网查询教材数据中……")
+            self.hier_dict, self.tag_dict, self.id_dict = fetch_metadata(None)
 
         if self.hier_dict:
             logging.debug(f"hier_dict = {len(self.hier_dict)}")
-            self.hierarchy_frame.config(text="查询完成")
-            self.hierarchy_frame.config(text=self.frame_names[1])
+            self.hierarchy_frame.configure(text="查询完成")
+            self.hierarchy_frame.configure(text=self.frame_names[1])
             self.update_frame(0)
         else:
             self.update_frame(-1, -1)
@@ -253,11 +251,11 @@ class BookSelectorFrame(ttk.Frame):
         self.scrollbar.pack_forget()  # 隐藏滚动条
         logging.debug(f"=>>> options = {options}")
         if not options:
-            self.select_all_btn.config(state=tk.DISABLED)
-            self.deselect_all_btn.config(state=tk.DISABLED)
-            self.books_frame.config(text=self.frame_names[0])
+            self.select_all_btn.configure(state=tk.DISABLED)
+            self.deselect_all_btn.configure(state=tk.DISABLED)
+            self.books_frame.configure(text=self.frame_names[0])
             if options is not None and len(options) == 0:
-                self.books_frame.config(text=f"{self.frame_names[0]}: 数据为空")
+                self.books_frame.configure(text=f"{self.frame_names[0]}: 数据为空")
             return
 
         width = len(str(len(options)))
@@ -279,9 +277,9 @@ class BookSelectorFrame(ttk.Frame):
 
         if options:
             self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-            self.select_all_btn.config(state=tk.NORMAL)
-            self.deselect_all_btn.config(state=tk.NORMAL)
-            self.books_frame.config(text=f"{self.frame_names[0]}: 共 {len(options)} 项资源")
+            self.select_all_btn.configure(state=tk.NORMAL)
+            self.deselect_all_btn.configure(state=tk.NORMAL)
+            self.books_frame.configure(text=f"{self.frame_names[0]}: 共 {len(options)} 项资源")
 
     def toggle_checkbox_selection(self, book_id: str):
         """切换选择状态"""
@@ -291,7 +289,7 @@ class BookSelectorFrame(ttk.Frame):
             self.selected_items.add(book_id)
         n1 = len(self.level_options[-1])
         n2 = len(self.selected_items)
-        self.books_frame.config(text=f"{self.frame_names[0]}: 共 {n1} 项资源，已选 {n2} 项")
+        self.books_frame.configure(text=f"{self.frame_names[0]}: 共 {n1} 项资源，已选 {n2} 项")
 
     def select_all(self):
         """全选"""
@@ -300,7 +298,7 @@ class BookSelectorFrame(ttk.Frame):
             var[0].set(True)
         n1 = len(self.level_options[-1])
         n2 = len(self.selected_items)
-        self.books_frame.config(text=f"{self.frame_names[0]}: 共 {n1} 项资源，已选 {n2} 项")
+        self.books_frame.configure(text=f"{self.frame_names[0]}: 共 {n1} 项资源，已选 {n2} 项")
 
     def deselect_all(self):
         """取消全选"""
@@ -309,7 +307,7 @@ class BookSelectorFrame(ttk.Frame):
             var[0].set(False)
         n1 = len(self.level_options[-1])
         n2 = len(self.selected_items)
-        self.books_frame.config(text=f"{self.frame_names[0]}: 共 {n1} 项资源，已选 {n2} 项")
+        self.books_frame.configure(text=f"{self.frame_names[0]}: 共 {n1} 项资源，已选 {n2} 项")
 
     def get_selected_urls(self) -> list[str]:
         """获取选中的URL列表"""
@@ -391,8 +389,7 @@ class DownloadApp(tk.Tk):
         self.frame_names = ["books", "inputs"]
         self.frame_titles = ["教材列表", "手动输入"]
         self.desc_texts = DESCRIBES
-        self.icon_dir = get_file_path(__file__, ICON_PATH)
-        self.download_dir = Path.home() / "Downloads"  # 改为用户目录
+        self.download_dir = "./downloads"  # 改为用户目录
 
         self.scale = scale
         self.os_name = os_name
@@ -412,9 +409,12 @@ class DownloadApp(tk.Tk):
         # style.theme_use('')
 
         # 设置Icon
-        small_icon = tk.PhotoImage(file=f"{self.icon_dir}/favicon.png")
-        large_icon = tk.PhotoImage(file=f"{self.icon_dir}/icon.png")
+        small_icon_file = base64_to_image(ICON_SMALL, "icon_small.png")
+        large_icon_file = base64_to_image(ICON_LARGE, "icon_large.png")
+        small_icon = tk.PhotoImage(file=small_icon_file)
+        large_icon = tk.PhotoImage(file=large_icon_file)
         self.iconphoto(False, large_icon, small_icon)
+
         self.fonts, default_size = self.setup_fonts()
         self.font_size = int(default_size * min((1.1 + (scale - 1) * 0.3), 1.5))
 
@@ -607,10 +607,10 @@ class DownloadApp(tk.Tk):
         try:
             # 显示进度条
             self.progress_var.set(0)
-            self.progress_label.config(text="准备开始下载...")
+            self.progress_label.configure(text="准备开始下载...")
             self.update()
             result, elapsed_time = self.simple_download(urls, suffix_list)
-            self.progress_label.config(text="下载完成。")
+            self.progress_label.configure(text="下载完成。")
 
             if result:
                 message = display_results(result, elapsed_time)
@@ -626,7 +626,7 @@ class DownloadApp(tk.Tk):
         logging.debug(f"\n共选择 {len(urls)} 项目，将保存到 {save_path} 目录，类型 {suffix_list}")
 
         # 更新进度显示
-        self.progress_label.config(text="正在解析URL...")
+        self.progress_label.configure(text="正在解析URL...")
         base_progress = 10
         self.progress_var.set(base_progress)
         self.update()
@@ -637,7 +637,7 @@ class DownloadApp(tk.Tk):
         )
 
         total = len(resource_dict)
-        self.progress_label.config(
+        self.progress_label.configure(
             text=f"共找到配置链接 {len(config_urls)} 项，资源文件 {total} 项"
         )
         base_progress = 20
@@ -652,7 +652,7 @@ class DownloadApp(tk.Tk):
         start_time = time.time()
 
         # 更新进度显示
-        self.progress_label.config(text=f"开始下载 {total} 项资源...")
+        self.progress_label.configure(text=f"开始下载 {total} 项资源...")
         self.update()
         results = download_files_tk(self, resource_dict, save_path, base_progress=base_progress)
 
@@ -686,17 +686,4 @@ def main(theme=None):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--theme", "-t", default="light", type=str, choices=["light", "dark"])
-    args = parser.parse_args()
-
-    # 配置日志
-    fmt = "%(asctime)s %(filename)s [line:%(lineno)d] %(levelname)s %(message)s"
-    log_level = logging.INFO
-    if args.debug:
-        log_level = logging.DEBUG
-    logging.basicConfig(level=log_level, format=fmt)
-    logging.debug("调试模式已启用")
-
-    main(args.theme)
+    main()

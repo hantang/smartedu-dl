@@ -18,10 +18,10 @@ from tools.downloader import download_files, fetch_all_data
 from tools.logo import DESCRIBES, LOGO_TEXT2
 from tools.parser import extract_resource_url, parse_urls, validate_url
 from tools.parser2 import fetch_metadata, gen_url_from_tags, query_metadata
-from tools.utils import get_file_path
+
 
 DEFAULT_URLS = []
-DATA_PATH = "../data"
+DATA_PATH = None
 DEFAULT_PATH = "./downloads"
 EXIT_KEY = "exit"
 ZERO_KEY = "0"
@@ -382,7 +382,7 @@ def interactive_download(default_output: str, audio: bool):
         if choice == choice_values[0]:
             if hier_dict is None:
                 click.echo("\n联网查询教材数据中……")
-                data_dir = get_file_path(__file__, DATA_PATH)
+                data_dir = DATA_PATH
                 hier_dict, tag_dict, id_dict = fetch_metadata(data_dir)
             if hier_dict is None:
                 click.secho("获取数据失败，请稍后再试", fg="red")

@@ -29,8 +29,8 @@ jobs:
 
       - name: Build app
         run: |
-          pyinstaller -F --name=${{env.CLI_APP_NAME}}.exe src/app-cli.py
-          pyinstaller -F --add-data="src/icons:icons" --icon=icons/favicon2.ico --name=${{env.APP_NAME}}.exe --windowed src/app-tk.pyw
+          pyinstaller --onefile --name=${{env.CLI_APP_NAME}}.exe src/app-cli.py
+          pyinstaller --onefile --icon=icons/favicon2.ico --name=${{env.APP_NAME}}.exe --windowed src/app-tk.pyw
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -61,8 +61,8 @@ jobs:
 
       - name: Build app
         run: |
-          pyinstaller -F --name=mac-${{env.CLI_APP_NAME}} src/app-cli.py
-          pyinstaller -F --add-data="src/icons:icons" --icon=icons/favicon2.ico --name=mac-${{env.APP_NAME}} --windowed src/app-tk.pyw
+          pyinstaller --onefile --name=mac-${{env.CLI_APP_NAME}} src/app-cli.py
+          pyinstaller --onefile --icon=icons/favicon2.ico --name=mac-${{env.APP_NAME}} --windowed src/app-tk.pyw
           pushd dist
           chmod +x mac-*-cli
           for app in mac-*.app; do
@@ -99,7 +99,7 @@ jobs:
 
       - name: Build app
         run: |
-          pyinstaller -F --name=linux-${{env.CLI_APP_NAME}} src/app-cli.py
+          pyinstaller --onefile --name=linux-${{env.CLI_APP_NAME}} src/app-cli.py
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:

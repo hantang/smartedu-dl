@@ -5,15 +5,12 @@
 import logging
 import time
 import tkinter as tk
-import tkinter.font as tkFont
 from tkinter import filedialog, messagebox, ttk
 
 from tools.downloader import download_files_tk, fetch_all_data
 from tools.parser import extract_resource_url, parse_urls
 from tools.parser2 import fetch_metadata, gen_url_from_tags, query_metadata
 from tools.utils import base64_to_image
-from tools.parser import RESOURCE_DICT
-from tools.logo import DESCRIBES, LOGO_TEXT
 from tools.icons import ICON_LARGE, ICON_SMALL
 
 
@@ -339,7 +336,7 @@ class InputURLAreaFrame(ttk.Frame):
         text_frame.pack(fill=tk.BOTH, expand=True, pady=self.pady)
 
         self.text = tk.Text(
-            text_frame, height=5, width=20, font=(self.fonts["sans_serif"], self.font_size)
+            text_frame, height=5, width=20
         )
         scrollbar = ttk.Scrollbar(text_frame, orient="vertical", command=self.text.yview)
         self.text.configure(yscrollcommand=scrollbar.set)
@@ -359,15 +356,11 @@ class InputURLAreaFrame(ttk.Frame):
         help_frame = ttk.LabelFrame(self, text="格式说明", padding=self.padx * 2)
         help_frame.pack(fill=tk.BOTH, expand=True, padx=self.padx, pady=self.pady)
 
-        keys = ["/tchMaterial", "/syncClassroom"]
         texts = ""
-        for i, key in enumerate(keys, 1):
-            config = RESOURCE_DICT[key]
-            texts += f"{i}. {config['name'][:2]}URL：" + str(config["resources"]["detail"]) + "\n"
 
         help_text = f"支持的URL格式示例：\n{texts}\n可以直接从浏览器地址复制URL。"
         help_label = ttk.Label(
-            help_frame, text=help_text, justify=tk.LEFT, font=(self.fonts["kaiti"], self.font_size)
+            help_frame, text=help_text, justify=tk.LEFT
         )
         help_label.pack(fill=tk.X, padx=self.padx, pady=self.pady)
         help_frame.bind(
@@ -388,7 +381,7 @@ class DownloadApp(tk.Tk):
         super().__init__()
         self.frame_names = ["books", "inputs"]
         self.frame_titles = ["教材列表", "手动输入"]
-        self.desc_texts = DESCRIBES
+        self.desc_texts = ["smartedu-dl", "", ""]
         self.download_dir = "./downloads"  # 改为用户目录
 
         self.scale = scale
@@ -415,8 +408,8 @@ class DownloadApp(tk.Tk):
         large_icon = tk.PhotoImage(file=large_icon_file)
         self.iconphoto(False, large_icon, small_icon)
 
-        self.fonts, default_size = self.setup_fonts()
-        self.font_size = int(default_size * min((1.1 + (scale - 1) * 0.3), 1.5))
+        self.fonts = None
+        self.font_size = None
 
         self.setup_ui()
 
@@ -430,41 +423,18 @@ class DownloadApp(tk.Tk):
         self.setup_mode_frame(main_frame)
         self.setup_control_frame(main_frame)
 
-    def setup_fonts(self):
-        font_families = {
-            "sans_serif": ["Arial", "Helvetica", "Segoe UI", "Roboto"],
-            "serif": ["Georgia", "Times New Roman"],
-            "monospace": ["Monaco", "Courier New", "Consolas"],
-            "kaiti": ["STKaiti", "SimKai", "楷体"],
-        }
-        default_font = tkFont.nametofont("TkDefaultFont")
-        default_family = default_font.actual("family")
-        default_size = default_font.actual("size")
-        available_fonts = tkFont.families()
-
-        font_dict = {}
-        for key, fonts in font_families.items():
-            for font in fonts:
-                if font in available_fonts:
-                    font_dict[key] = font
-                    break
-            else:
-                font_dict[key] = default_family
-        return font_dict, default_size
-
     def setup_title_frame(self, main_frame):
         # 1. 添加标题和LOGO
         title_frame = ttk.Frame(main_frame)
         title_frame.pack(fill=tk.BOTH, expand=True)
 
         ttk.Label(
-            title_frame, text=LOGO_TEXT, anchor=tk.CENTER, font=(self.fonts["monospace"],)
+            title_frame, text="", anchor=tk.CENTER, font=("Courier New",)
         ).pack(fill=tk.BOTH, expand=True)
         slogan_label = ttk.Label(
             title_frame,
             text=self.desc_texts[2],
             anchor=tk.CENTER,
-            font=(self.fonts["kaiti"], self.font_size),
         )
         slogan_label.pack(fill=tk.BOTH, expand=True, pady=self.pady)
         title_frame.bind(

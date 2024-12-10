@@ -19,18 +19,19 @@ jobs:
       - name: Set up Python 3
         uses: actions/setup-python@v5
         with:
-          python-version: 3.x
+          python-version: "3.10"
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pyinstaller
+          pip install -U -r requirements.txt
+          pip install -U pyinstaller
 
       - name: Build app
         run: |
-          pyinstaller --onefile --name=${{env.CLI_APP_NAME}}.exe src/app-cli.py
-          pyinstaller --onefile --name=${{env.APP_NAME}}.exe --icon=icons/favicon2.ico --windowed src/app-tk.pyw
+          # pyinstaller --onefile --name=${{env.CLI_APP_NAME}}.exe src/app-cli.py
+          # pyinstaller --onefile --name=${{env.APP_NAME}}.exe --windowed src/app-tk.pyw
+          pyinstaller --onefile --name=${{env.APP_NAME}}.exe --windowed src/app-qts.pyw
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -39,77 +40,78 @@ jobs:
           retention-days: 7
           path: "dist/*.exe"
 
-  build-macos:
-    runs-on: macos-13
-    # strategy:
-    #   matrix:
-    #     arch: ["x64", "arm64"]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  # build-macos:
+  #   runs-on: macos-13
+  #   # strategy:
+  #   #   matrix:
+  #   #     arch: ["x64", "arm64"]
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      - name: Set up Python 3
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.x
+  #     - name: Set up Python 3
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: "3.10"
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pyinstaller Pillow
+  #     - name: Install dependencies
+  #       run: |
+  #         python -m pip install --upgrade pip
+  #         pip install -r requirements.txt
+  #         pip install pyinstaller Pillow
 
-      - name: Build app
-        run: |
-          pyinstaller --onefile --name=mac-${{env.CLI_APP_NAME}} src/app-cli.py
-          pyinstaller --onefile --name=mac-${{env.APP_NAME}} --icon=icons/favicon2.ico --windowed src/app-tk.pyw
-          pushd dist
-          chmod +x mac-*-cli
-          for app in mac-*.app; do
-              zip -r "$(basename "$app").zip" "$app"
-          done
-          popd
+  #     - name: Build app
+  #       run: |
+  #         pyinstaller -F --name=mac-${{env.CLI_APP_NAME}} src/app-cli.py
+  #         pyinstaller -F --add-data="src/icons:icons" --icon=icons/favicon2.ico --name=mac-${{env.APP_NAME}} --windowed src/app-tk.pyw
+  #         pushd dist
+  #         chmod +x mac-*-cli
+  #         for app in mac-*.app; do
+  #             zip -r "$(basename "$app").zip" "$app"
+  #         done
+  #         popd
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: mac-builds
-          if-no-files-found: error
-          retention-days: 7
-          path: |
-            dist/mac-*-cli
-            dist/mac-*.zip
+  #     - name: Upload Artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: mac-builds
+  #         if-no-files-found: error
+  #         retention-days: 7
+  #         path: |
+  #           dist/mac-*-cli
+  #           dist/mac-*.zip
 
-  build-linux:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  # build-linux:
+  #   runs-on: ubuntu-24.04
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      - name: Set up Python 3
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.x
+  #     - name: Set up Python 3
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: "3.10"
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pyinstaller
+  #     - name: Install dependencies
+  #       run: |
+  #         python -m pip install --upgrade pip
+  #         pip install -r requirements.txt
+  #         pip install pyinstaller
 
-      - name: Build app
-        run: |
-          pyinstaller --onefile --name=linux-${{env.CLI_APP_NAME}} src/app-cli.py
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-x64-builds
-          if-no-files-found: error
-          retention-days: 7
-          path: "dist/linux-*"
+  #     - name: Build app
+  #       run: |
+  #         pyinstaller -F --name=linux-${{env.CLI_APP_NAME}} src/app-cli.py
+  #     - name: Upload Artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: linux-x64-builds
+  #         if-no-files-found: error
+  #         retention-days: 7
+  #         path: "dist/linux-*"
 
   publish:
-    needs: [build-windows, build-macos, build-linux]
+    # needs: [build-windows, build-macos, build-linux]
+    needs: [build-windows]
     runs-on: ubuntu-latest
     steps:
       - name: Download artifact
@@ -123,8 +125,8 @@ jobs:
       - name: Generate SHA256 checksums
         run: |
           sha256sum *.exe > SHA256SUMS.txt
-          sha256sum mac-* >> SHA256SUMS.txt
-          sha256sum linux-* >> SHA256SUMS.txt
+          # sha256sum mac-* >> SHA256SUMS.txt
+          # sha256sum linux-* >> SHA256SUMS.txt
           cat SHA256SUMS.txt
 
       - name: Release
@@ -135,6 +137,4 @@ jobs:
           tag_name: ${{ steps.ref.outputs.version }}
           files: |
             *.exe
-            mac-*
-            linux-*
             SHA256SUMS.txt
